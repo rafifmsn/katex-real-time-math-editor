@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KaTeX Real-time Editor | Generate & Download LaTeX Math Equations as PNG</title>
+
+    <!-- Primary SEO Meta Tags -->
+    <meta name="description" content="A powerful, real-time KaTeX editor to generate and customize beautiful LaTeX math equations. Change colors, fonts, and download high-resolution PNG images.">
+    <meta name="keywords" content="latex editor, KaTeX, math equations, math to png, equation generator, real-time latex, html2canvas, mathjax alternative">
+    <meta name="robots" content="index, follow">
+
+    <!-- Open Graph Tags (For Social Media) -->
+    <meta property="og:title" content="KaTeX Real-time Editor | Download LaTeX Math Equations as PNG">
+    <meta property="og:description" content="A powerful, real-time KaTeX editor to generate and customize beautiful LaTeX math equations. Change colors, fonts, and download high-resolution PNG images.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://katex.rafifmsn.com/"> 
+    <meta property="og:image" content="./assets/og.png">
+    <meta property="og:site_name" content="KaTeX Editor">
+
+    <!-- Twitter Card Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@rafifmsn"> 
+    <meta name="twitter:creator" content="@rafifmsn"> 
+    <meta name="twitter:title" content="KaTeX Real-time Editor">
+    <meta name="twitter:description" content="Generate and customize beautiful LaTeX math equations with real-time rendering and high-res PNG download.">
+    <meta name="twitter:image" content="./assets/og.png">
+    
+    <!-- Load Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Load Coloris for Color Picker -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/mdbassit/Coloris@latest/dist/coloris.min.css"/>
+    <script src="https://cdn.jsdelivr.net/gh/mdbassit/Coloris@latest/dist/coloris.min.js"></script>
+
+    <!-- Load Tailwind CSS via CDN with Custom Config -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            DEFAULT: '#7261B3',
+                            hover: '#8B7ACC',
+                            active: '#5E4FA3'
+                        },
+                        dark: {
+                            bg: '#0D0B14',
+                            surface: '#161320',
+                            border: '#2A2438'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Load Flowbite -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.0/flowbite.min.js"></script>
+    
+    <!-- Load KaTeX -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+    
+    <!-- Load html2canvas -->
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    
+    <style>
+        /* Custom styling */
+        body { 
+            background-color: #0D0B14; 
+            color: #E2E8F0;
+        }
+        
+        /* Preview containers are explicitly light by default for readability unless customized */
+        #mathPreviewContainer, .library-formula-preview {
+            display: inline-block;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            transition: all 0.3s ease-in-out;
+            background-color: white; /* Default white for math */
+            color: black;
+            min-width: 100px;
+            text-align: center;
+        }
+
+        .library-item:hover .library-formula-preview {
+            transform: scale(1.02);
+            box-shadow: 0 0 15px rgba(114, 97, 179, 0.2);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0D0B14; }
+        ::-webkit-scrollbar-thumb { background: #2A2438; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #7261B3; }
+
+        /* Coloris Customization to match dark theme */
+        .clr-field button {
+            width: 100%;
+            height: 40px;
+            border-radius: 0.5rem;
+            border: 1px solid #2A2438;
+            margin: 0.5rem auto;
+        }
+        .clr-picker {
+            background-color: #161320;
+            border: 1px solid #2A2438;
+            border-radius: 0.75rem;
+        }
+        .clr-color { color: #fff; }
+
+        /* Hide pages initially */
+        .page { display: none; }
+
+        /* KaTeX alignment */
+        .katex-display > .katex { text-align: center !important; }
+        
+        /* Custom Input styling focus */
+        .custom-input:focus {
+            outline: none;
+            border-color: #7261B3;
+            box-shadow: 0 0 0 2px rgba(114, 97, 179, 0.3);
+        }
+
+        @media screen and (max-width: 300px){
+            #logo {display: none;}
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Global App Header -->
+    <header class="bg-dark-surface border-b border-dark-border sticky top-0 z-20 backdrop-blur-md bg-opacity-90">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <img src="./assets/logo.svg" alt="Graph-Greener" id="logo" class="h-6 max-h-6 w-auto" onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNzI2MUIzIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTEyIDJMMiA3bDEwIDUgMTAtNS0xMC01ek0yIDE3bDEwIDUgMTAtNSIvPjxwYXRoIGQ9Ik0yIDEybDEwIDUgMTAtNSIvPjwvc3ZnPg=='">
+                <span class="text-xl font-bold tracking-wide text-white hidden sm:block">Graph-Greener</span>
+            </div>
+            <nav class="flex gap-3">
+                <button id="navMainBtn" data-page="main" class="nav-btn px-4 py-2 font-medium text-sm md:text-base rounded-lg transition-all duration-200 flex items-center bg-brand text-white shadow-[0_0_15px_rgba(114,97,179,0.4)]">
+                    <svg class="w-4 h-4 md:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                    <span class="hidden md:inline">LaTeX Editor</span>
+                    <span class="md:hidden pl-2">LaTeX</span>
+                </button>
+                <button id="navMathBtn" data-page="math" class="nav-btn px-4 py-2 font-medium text-sm md:text-base text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all duration-200 flex items-center">
+                    <svg class="w-4 h-4 md:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0h6"></path></svg>
+                    <span class="hidden md:inline">Formula Library</span>
+                    <span class="md:hidden pl-2">Formula</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
+
+        <!-- ================================== 1. MAIN PAGE (EDITOR) ================================== -->
+        <div id="main-page" class="page">
+            <h2 class="text-2xl font-bold mb-6 text-white border-b border-dark-border pb-4 flex items-center">
+                <span class="text-brand mr-2">✏️</span> Real-time LaTeX Editor
+            </h2>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+                
+                <!-- Left Column: Input and Symbols -->
+                <div class="lg:col-span-2 space-y-6">
+                    <div>
+                        <label for="latexInput" class="block text-sm font-medium text-gray-400 mb-2">Code Input</label>
+                        <textarea id="latexInput" rows="5" class="custom-input w-full p-4 bg-dark-surface border border-dark-border rounded-xl text-gray-200 placeholder-gray-600 font-mono text-base transition-colors" placeholder="\frac{-b \pm \sqrt{b^2-4ac}}{2a}"></textarea>
+                    </div>
+                    
+                    <!-- Predefined Symbols -->
+                    <div class="bg-dark-surface border border-dark-border rounded-xl p-5">
+                        <div class="flex justify-between items-center mb-4">
+                            <label class="text-sm font-medium text-gray-400">Quick Insert</label>
+                            <span class="text-xs text-gray-500">Click to append</span>
+                        </div>
+                        <div id="symbol-buttons" class="space-y-4">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Live Preview and Actions -->
+                <div class="lg:col-span-1 space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Live Preview</label>
+                        <div class="p-6 bg-dark-surface border border-dark-border rounded-xl flex flex-col items-center justify-center min-h-[220px]">
+                            <!-- KaTeX Rendered Output -->
+                            <div id="mathPreviewContainer" class="shadow-lg">
+                                <span id="mathPreview" class="text-2xl"></span>
+                            </div>
+                            <p id="previewError" class="text-red-400 text-sm mt-4 hidden bg-red-900/20 px-3 py-1 rounded-md border border-red-900/50">Invalid LaTeX syntax.</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <button id="copyLatexBtn" class="flex items-center justify-center px-4 py-3 border border-transparent text-sm font-semibold rounded-xl text-white bg-brand hover:bg-brand-hover transition shadow-lg shadow-brand/20">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6a2 2 0 002-2V7M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4 0v4m0 0l-2-2m2 2l2-2"></path></svg>
+                            Copy Code
+                        </button>
+                        <button id="downloadPngBtn" class="flex items-center justify-center px-4 py-3 border border-dark-border text-sm font-semibold rounded-xl text-gray-300 bg-dark-surface hover:bg-white/5 transition">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            PNG
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Customization Options -->
+            <div class="bg-dark-surface p-6 rounded-xl border border-dark-border">
+                <h3 class="text-lg font-semibold mb-6 text-white flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                    Style & Format
+                </h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+
+                    <!-- Font Size -->
+                    <div>
+                        <label for="fontSize" class="block text-xs font-medium text-gray-400 mb-1">Size (px)</label>
+                        <input type="number" id="fontSize" value="32" min="16" max="120" class="custom-input w-full p-2 bg-[#0D0B14] border border-dark-border rounded-lg text-white text-center">
+                    </div>
+
+                    <!-- Corner Radius -->
+                    <div>
+                        <label for="radius" class="block text-xs font-medium text-gray-400 mb-1">Rounding (px)</label>
+                        <input type="number" id="radius" value="12" min="0" max="50" class="custom-input w-full p-2 bg-[#0D0B14] border border-dark-border rounded-lg text-white text-center">
+                    </div>
+
+                    <!-- Foreground Color -->
+                    <div>
+                        <label for="fgColor" class="block text-xs font-medium text-gray-400 mb-1">Text Color</label>
+                        <input type="text" id="fgColor" value="#000000" class="w-full" data-coloris>
+                    </div>
+
+                    <!-- Background Color -->
+                    <div>
+                        <label for="bgColor" class="block text-xs font-medium text-gray-400 mb-1">Background</label>
+                        <input type="text" id="bgColor" value="#ffffff" class="w-full" data-coloris>
+                    </div>
+
+                    <!-- Delimiter Type -->
+                    <div class="col-span-2">
+                        <label for="delimiterSelect" class="block text-xs font-medium text-gray-400 mb-1">Copy Format</label>
+                        <div class="relative">
+                            <select id="delimiterSelect" class="custom-input appearance-none w-full p-2 pl-3 pr-10 bg-[#0D0B14] border border-dark-border rounded-lg text-white focus:outline-none focus:border-brand cursor-pointer">
+                                <option value="">Pure LaTeX</option>
+                                <option value="inline" selected>$ ... $ (Inline)</option>
+                                <option value="block">$$ ... $$ (Block)</option>
+                                <option value="latex">\[ ... \] (LaTeX)</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+                                <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================================== 2. MATH PAGE (LIBRARY) ================================== -->
+        <div id="math-page" class="page">
+            <h2 class="text-2xl font-bold mb-6 text-white border-b border-dark-border pb-4 flex items-center">
+                <span class="text-brand mr-2">📚</span> Formula Library
+            </h2>
+            
+            <!-- Search and Global Config -->
+            <div class="flex flex-col md:flex-row gap-4 mb-8">
+                <div class="flex-grow relative group">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="w-5 h-5 text-gray-500 group-focus-within:text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </div>
+                    <input type="text" id="librarySearch" placeholder="Search equations (e.g., 'entropy', 'matrix', 'flux')..." class="custom-input w-full pl-10 p-3 bg-dark-surface border border-dark-border rounded-xl text-white placeholder-gray-500 shadow-sm">
+                </div>
+
+                <!-- Global Library Delimiter -->
+                <div class="min-w-[200px] relative">
+                    <select id="libraryDelimiterSelect" class="custom-input appearance-none w-full p-3 pl-4 pr-10 bg-dark-surface border border-dark-border rounded-xl text-white shadow-sm cursor-pointer">
+                        <option value="block" selected>Copy: $$...$$</option>
+                        <option value="inline">Copy: $...$</option>
+                        <option value="">Copy: Pure LaTeX</option>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
+                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formula Categories -->
+            <div id="formula-library-container" class="space-y-4">
+                <p class="text-center text-gray-500 mt-12 animate-pulse" id="loadingLibraryMessage">Loading the formula library...</p>
+            </div>
+
+            <!-- No results message -->
+            <div id="noResults" class="hidden text-center mt-12 p-8 bg-dark-surface border border-dark-border rounded-xl">
+                <svg class="w-16 h-16 mx-auto text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <p class="text-xl font-semibold text-gray-300">No Formulas Found</p>
+                <p class="text-gray-500 mt-2">Try a specific term like "Fourier" or "Gamma".</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- General Message Box -->
+    <div id="messageBox" class="fixed top-5 right-5 z-50 px-6 py-3 rounded-lg shadow-2xl text-white font-medium transition-all duration-300 opacity-0 translate-y-[-20px] pointer-events-none border border-white/10" role="alert"></div>
+
+    <script>
+        // --- 1. CONFIGURATION & DATA ---
+
+        const SYMBOLS = {
+            "Greek": ["\\alpha", "\\beta", "\\gamma", "\\Gamma", "\\delta", "\\Delta", "\\epsilon", "\\varepsilon", "\\zeta", "\\eta", "\\theta", "\\Theta", "\\iota", "\\kappa", "\\lambda", "\\Lambda", "\\mu", "\\nu", "\\xi", "\\Xi", "\\pi", "\\Pi", "\\rho", "\\sigma", "\\Sigma", "\\tau", "\\upsilon", "\\phi", "\\Phi", "\\chi", "\\psi", "\\Psi", "\\omega", "\\Omega"],
+            "Operators": ["\\sum", "\\prod", "\\int", "\\oint", "\\frac{\\cdot}{\\cdot}", "\\sqrt{\\cdot}", "\\partial", "\\nabla", "\\infty", "\\pm", "\\mp", "\\times", "\\div", "\\cdot"],
+            "Relations": ["=", "\\approx", "\\equiv", "\\neq", "\\le", "\\ge", "\\ll", "\\gg", "\\in", "\\notin", "\\subset", "\\subseteq", "\\cup", "\\cap", "\\forall", "\\exists"],
+            "Logic & Arrows": ["\\to", "\\implies", "\\iff", "\\rightarrow", "\\leftarrow", "\\Rightarrow", "\\Leftrightarrow", "\\mapsto", "\\neg", "\\land", "\\lor", "\\therefore"],
+            "Brackets": ["(\\cdot)", "[\\cdot]", "\\{\\cdot\\}", "\\langle \\cdot \\rangle", "|\\cdot|", "\\|\\cdot\\|"],
+            "Matrices": [] // Special handling in code
+        };
+
+        const FORMULA_DATA = [
+            {
+                category: "Calculus",
+                icon: "∫",
+                formulas: [
+                    { name: "Definition of Derivative", latex: "f'(x) = \\lim_{h \\to 0} \\frac{f(x+h) - f(x)}{h}" },
+                    { name: "Quadratic Formula", latex: "x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}" },
+                    { name: "Power Rule", latex: "\\frac{d}{dx}x^n = nx^{n-1}" },
+                    { name: "Product Rule", latex: "\\frac{d}{dx}(uv) = u'v + uv'" },
+                    { name: "Quotient Rule", latex: "\\frac{d}{dx}\\left(\\frac{u}{v}\\right) = \\frac{u'v - uv'}{v^2}" },
+                    { name: "Chain Rule", latex: "\\frac{dy}{dx} = \\frac{dy}{du} \\cdot \\frac{du}{dx}" },
+                    { name: "Integration by Parts", latex: "\\int u \\, dv = uv - \\int v \\, du" },
+                    { name: "Taylor Series", latex: "f(x) = \\sum_{n=0}^{\\infty} \\frac{f^{(n)}(a)}{n!} (x-a)^n" },
+                    { name: "Fundamental Theorem", latex: "\\int_a^b f(x) \\, dx = F(b) - F(a)" },
+                    { name: "Arc Length", latex: "L = \\int_a^b \\sqrt{1 + [f'(x)]^2} \\, dx" },
+                    { name: "Surface Area of Revolution", latex: "S = 2\\pi \\int_a^b f(x) \\sqrt{1 + [f'(x)]^2} \\, dx" }
+                ]
+            },
+            {
+                category: "Linear Algebra",
+                icon: "Λ",
+                formulas: [
+                    { name: "Matrix Multiplication", latex: "(AB)_{ij} = \\sum_{k=1}^n A_{ik} B_{kj}" },
+                    { name: "Determinant (2x2)", latex: "\\det(A) = ad - bc" },
+                    { name: "Inverse Matrix (2x2)", latex: "A^{-1} = \\frac{1}{ad-bc} \\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}" },
+                    { name: "Eigenvalue Equation", latex: "A\\mathbf{v} = \\lambda\\mathbf{v}" },
+                    { name: "Characteristic Equation", latex: "\\det(A - \\lambda I) = 0" },
+                    { name: "Dot Product", latex: "\\mathbf{a} \\cdot \\mathbf{b} = \\sum_{i=1}^n a_i b_i = |\\mathbf{a}| |\\mathbf{b}| \\cos \\theta" },
+                    { name: "Cross Product Magnitude", latex: "|\\mathbf{a} \\times \\mathbf{b}| = |\\mathbf{a}| |\\mathbf{b}| \\sin \\theta" },
+                    { name: "Projection", latex: "\\text{proj}_{\\mathbf{b}} \\mathbf{a} = \\frac{\\mathbf{a} \\cdot \\mathbf{b}}{|\\mathbf{b}|^2} \\mathbf{b}" }
+                ]
+            },
+            {
+                category: "Statistics & Probability",
+                icon: "σ",
+                formulas: [
+                    { name: "Sample Mean", latex: "\\bar{x} = \\frac{1}{n} \\sum_{i=1}^{n} x_i" },
+                    { name: "Sample Variance", latex: "s^2 = \\frac{1}{n-1} \\sum_{i=1}^{n} (x_i - \\bar{x})^2" },
+                    { name: "Standard Deviation", latex: "\\sigma = \\sqrt{\\frac{1}{N} \\sum_{i=1}^{N} (x_i - \\mu)^2}" },
+                    { name: "Correlation Coefficient", latex: "r = \\frac{\\sum (x_i - \\bar{x})(y_i - \\bar{y})}{\\sqrt{\\sum (x_i - \\bar{x})^2 \\sum (y_i - \\bar{y})^2}}" },
+                    { name: "Binomial Distribution", latex: "P(X=k) = \\binom{n}{k} p^k (1-p)^{n-k}" },
+                    { name: "Poisson Distribution", latex: "P(X=k) = \\frac{\\lambda^k e^{-\\lambda}}{k!}" },
+                    { name: "Normal PDF", latex: "f(x) = \\frac{1}{\\sigma\\sqrt{2\\pi}} e^{-\\frac{1}{2}\\left(\\frac{x-\\mu}{\\sigma}\\right)^2}" },
+                    { name: "Bayes' Theorem", latex: "P(A|B) = \\frac{P(B|A)P(A)}{P(B)}" },
+                    { name: "Z-Score", latex: "z = \\frac{x - \\mu}{\\sigma}" }
+                ]
+            },
+            {
+                category: "Physics: Classical",
+                icon: "F",
+                formulas: [
+                    { name: "Newton's Second Law", latex: "\\mathbf{F} = \\frac{d\\mathbf{p}}{dt} = m\\mathbf{a}" },
+                    { name: "Kinematic Equation 1", latex: "v = v_0 + at" },
+                    { name: "Kinematic Equation 2", latex: "x = x_0 + v_0t + \\frac{1}{2}at^2" },
+                    { name: "Kinematic Equation 3", latex: "v^2 = v_0^2 + 2a(x - x_0)" },
+                    { name: "Gravitational Force", latex: "F_g = G \\frac{m_1 m_2}{r^2}" },
+                    { name: "Kinetic Energy", latex: "K = \\frac{1}{2}mv^2" },
+                    { name: "Potential Energy (Grav)", latex: "U_g = mgh" },
+                    { name: "Hooke's Law", latex: "F_s = -kx" },
+                    { name: "Work-Energy Theorem", latex: "W = \\Delta K" },
+                    { name: "Centripetal Force", latex: "F_c = \\frac{mv^2}{r}" },
+                    { name: "Torque", latex: "\\boldsymbol{\\tau} = \\mathbf{r} \\times \\mathbf{F}" }
+                ]
+            },
+            {
+                category: "Physics: EM & Thermo",
+                icon: "⚡",
+                formulas: [
+                    { name: "Coulomb's Law", latex: "F_E = k_e \\frac{|q_1 q_2|}{r^2}" },
+                    { name: "Electric Field", latex: "\\mathbf{E} = \\frac{\\mathbf{F}}{q}" },
+                    { name: "Gauss's Law", latex: "\\oint \\mathbf{E} \\cdot d\\mathbf{A} = \\frac{Q_{enc}}{\\varepsilon_0}" },
+                    { name: "Ohm's Law", latex: "V = IR" },
+                    { name: "Lorentz Force", latex: "\\mathbf{F} = q(\\mathbf{E} + \\mathbf{v} \\times \\mathbf{B})" },
+                    { name: "Maxwell: Faraday", latex: "\\nabla \\times \\mathbf{E} = -\\frac{\\partial \\mathbf{B}}{\\partial t}" },
+                    { name: "Maxwell: Ampere", latex: "\\nabla \\times \\mathbf{B} = \\mu_0\\mathbf{J} + \\mu_0\\varepsilon_0 \\frac{\\partial \\mathbf{E}}{\\partial t}" },
+                    { name: "Ideal Gas Law", latex: "PV = nRT" },
+                    { name: "First Law of Thermo", latex: "\\Delta U = Q - W" },
+                    { name: "Entropy", latex: "S = k_B \\ln \\Omega" }
+                ]
+            },
+            {
+                category: "Quantum Mechanics",
+                icon: "ψ",
+                formulas: [
+                    { name: "Schrödinger Equation", latex: "i\\hbar \\frac{\\partial}{\\partial t} \\Psi(\\mathbf{r},t) = \\hat{H} \\Psi(\\mathbf{r},t)" },
+                    { name: "Heisenberg Uncertainty", latex: "\\Delta x \\Delta p \\ge \\frac{\\hbar}{2}" },
+                    { name: "Energy of Photon", latex: "E = hf = \\hbar \\omega" },
+                    { name: "de Broglie Wavelength", latex: "\\lambda = \\frac{h}{p}" },
+                    { name: "Expectation Value", latex: "\\langle A \\rangle = \\int \\Psi^* \\hat{A} \\Psi \\, dx" }
+                ]
+            }
+        ];
+
+        // --- 2. DOM ELEMENTS ---
+        const dom = {
+            mathPreview: document.getElementById('mathPreview'),
+            mathPreviewContainer: document.getElementById('mathPreviewContainer'),
+            latexInput: document.getElementById('latexInput'),
+            previewError: document.getElementById('previewError'),
+            symbolButtonsDiv: document.getElementById('symbol-buttons'),
+            copyLatexBtn: document.getElementById('copyLatexBtn'),
+            downloadPngBtn: document.getElementById('downloadPngBtn'),
+            fontSize: document.getElementById('fontSize'),
+            fgColor: document.getElementById('fgColor'),
+            bgColor: document.getElementById('bgColor'),
+            radius: document.getElementById('radius'),
+            delimiterSelect: document.getElementById('delimiterSelect'),
+            libraryDelimiterSelect: document.getElementById('libraryDelimiterSelect'),
+            librarySearch: document.getElementById('librarySearch'),
+            formulaContainer: document.getElementById('formula-library-container'),
+            noResults: document.getElementById('noResults'),
+            messageBox: document.getElementById('messageBox'),
+            pages: document.querySelectorAll('.page'),
+            navBtns: document.querySelectorAll('.nav-btn')
+        };
+
+        let currentPage = 'main';
+
+        // --- 3. HELPER FUNCTIONS ---
+
+        function showMessage(text, type = 'success') {
+            const { messageBox } = dom;
+            messageBox.textContent = text;
+            
+            // Reset classes
+            messageBox.className = 'fixed top-5 right-5 z-50 px-6 py-3 rounded-lg shadow-2xl text-white font-medium transition-all duration-300 opacity-100 translate-y-0 border border-white/10';
+            
+            if (type === 'success') {
+                messageBox.classList.add('bg-brand', 'shadow-brand/30');
+            } else if (type === 'error') {
+                messageBox.classList.add('bg-red-600', 'shadow-red-600/30');
+            } else {
+                messageBox.classList.add('bg-blue-600', 'shadow-blue-600/30');
+            }
+
+            setTimeout(() => {
+                messageBox.classList.remove('opacity-100', 'block', 'translate-y-0');
+                messageBox.classList.add('opacity-0', 'hidden', 'translate-y-[-20px]');
+            }, 3000);
+        }
+
+        function wrapWithDelimiter(latex, type) {
+            if (type === 'inline') return `$${latex}$`;
+            if (type === 'block') return `$$${latex}$$`;
+            if (type === 'latex') return `\\[${latex}\\]`;
+            return latex;
+        }
+
+        function copyToClipboard(text, successMsg) {
+            navigator.clipboard.writeText(text).then(() => {
+                showMessage(successMsg);
+            }).catch(() => {
+                // Fallback
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                showMessage(successMsg);
+            });
+        }
+
+        // --- 4. EDITOR FUNCTIONS ---
+
+        function renderEquation() {
+            const latex = dom.latexInput.value.trim();
+            dom.mathPreviewContainer.style.fontSize = `${dom.fontSize.value}px`;
+            
+            if (!latex) {
+                dom.mathPreview.innerHTML = '<span class="text-black-300 text-lg opacity-50">Preview appears here...</span>';
+                dom.previewError.classList.add('hidden');
+                return;
+            }
+
+            try {
+                katex.render(latex, dom.mathPreview, {
+                    throwOnError: true,
+                    displayMode: true,
+                    output: 'html' // smoother rendering
+                });
+                dom.previewError.classList.add('hidden');
+            } catch (e) {
+                dom.mathPreview.innerHTML = '';
+                dom.previewError.classList.remove('hidden');
+            }
+        }
+
+        function applyStyles() {
+            dom.mathPreviewContainer.style.color = dom.fgColor.value;
+            dom.mathPreviewContainer.style.backgroundColor = dom.bgColor.value;
+            dom.mathPreviewContainer.style.borderRadius = `${dom.radius.value}px`;
+            renderEquation();
+        }
+
+        function insertAtCursor(text) {
+            const input = dom.latexInput;
+            const start = input.selectionStart;
+            const end = input.selectionEnd;
+            const before = input.value.substring(0, start);
+            const after = input.value.substring(end);
+            
+            // Handle placeholders like \frac{}{}
+            const valToInsert = text.includes('\\cdot') ? text.replace(/\\cdot/g, '') : text;
+            
+            input.value = before + valToInsert + after;
+            input.focus();
+            
+            // Try to place cursor meaningfully
+            const bracePos = valToInsert.indexOf('{}');
+            if (bracePos !== -1) {
+                input.setSelectionRange(start + bracePos + 1, start + bracePos + 1);
+            } else {
+                input.setSelectionRange(start + valToInsert.length, start + valToInsert.length);
+            }
+            
+            renderEquation();
+        }
+
+        function populateSymbols() {
+            dom.symbolButtonsDiv.innerHTML = '';
+            
+            Object.keys(SYMBOLS).forEach(category => {
+                const groupDiv = document.createElement('div');
+                groupDiv.className = 'flex flex-wrap items-center gap-2 mb-3 last:mb-0';
+                
+                // Category Label
+                const label = document.createElement('span');
+                // Added flex-shrink-0 and align-items-center implicitly via Tailwind classes
+                label.className = 'text-xs font-bold text-brand uppercase tracking-wider mr-2 w-full sm:w-auto mb-1 sm:mb-0 flex items-center flex-shrink-0';
+                label.textContent = category;
+                groupDiv.appendChild(label);
+
+                if (category === 'Matrices') {
+                    // Special Matrix Buttons
+                    const sizes = [
+                        { label: '2x2', code: '\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}' },
+                        { label: '3x3', code: '\\begin{pmatrix} a & b & c \\\\ d & e & f \\\\ g & h & i \\end{pmatrix}' },
+                        { label: 'Vector', code: '\\begin{pmatrix} x \\\\ y \\\\ z \\end{pmatrix}' },
+                        { label: 'Empty', code: '\\begin{pmatrix} & \\\\ & \\end{pmatrix}' }
+                    ];
+                    
+                    sizes.forEach(m => {
+                        const btn = document.createElement('button');
+                        btn.className = 'px-3 py-1.5 text-xs font-medium rounded-md bg-dark-bg text-gray-300 hover:bg-brand hover:text-white transition-colors border border-dark-border';
+                        btn.textContent = m.label;
+                        btn.onclick = () => insertAtCursor(m.code);
+                        groupDiv.appendChild(btn);
+                    });
+
+                } else {
+                    // Standard Symbols
+                    SYMBOLS[category].forEach(sym => {
+                        const btn = document.createElement('button');
+                        btn.className = 'min-w-[32px] h-8 flex items-center justify-center text-sm rounded bg-dark-bg text-gray-300 hover:bg-brand hover:text-white transition-all border border-dark-border';
+                        
+                        let renderSym = sym;
+
+                        if (sym === '\\frac{\\cdot}{\\cdot}') {
+                            renderSym = '\\frac{A}{B}'; 
+                        } else if (sym === '\\sqrt{\\cdot}') {
+                            renderSym = '\\sqrt{A}'; 
+                        } else if (category === 'Brackets') {
+                            // Use a placeholder letter 'A' inside brackets for visual rendering
+                            renderSym = sym.replace(/\\cdot/g, '\\text{A}');
+                        }
+                        
+                        try {
+                            katex.render(renderSym, btn, { 
+                                throwOnError: false,
+                                // We are rendering a simple symbol, so text mode is fine, but math mode is often better for symbols
+                                displayMode: false
+                            });
+                        } catch {
+                            btn.textContent = sym;
+                        }
+
+                        btn.onclick = () => insertAtCursor(sym);
+                        groupDiv.appendChild(btn);
+                    });
+                }
+                dom.symbolButtonsDiv.appendChild(groupDiv);
+            });
+        }
+
+        function downloadImage(elementId, filename = 'formula.png') {
+            const el = document.getElementById(elementId);
+            if (!el || el.textContent.includes('Preview appears')) {
+                showMessage('Nothing to download!', 'error');
+                return;
+            }
+
+            showMessage('Generating Image...', 'info');
+
+            const katexEl = el.querySelector('.katex');
+            let originalDisplay = '';
+            let originalAlign = '';
+            
+            if (katexEl) {
+                // Store original styles
+                originalDisplay = katexEl.style.display;
+                originalAlign = katexEl.style.verticalAlign;
+                
+                // Force stable layout for html2canvas to capture elements like brackets and fractions fully
+                katexEl.style.display = 'inline-block';
+                katexEl.style.verticalAlign = 'middle'; 
+            }
+
+            html2canvas(el, {
+                backgroundColor: null,
+                scale: 3, // High resolution
+                logging: false,
+                useCORS: true
+            }).then(canvas => {
+                // Restore styles immediately after capture
+                if (katexEl) {
+                    katexEl.style.display = originalDisplay;
+                    katexEl.style.verticalAlign = originalAlign;
+                }
+
+                const link = document.createElement('a');
+                link.download = filename;
+                link.href = canvas.toDataURL('image/png');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                showMessage('Image Downloaded!');
+            }).catch(e => {
+                // Restore styles on error too
+                if (katexEl) {
+                    katexEl.style.display = originalDisplay;
+                    katexEl.style.verticalAlign = originalAlign;
+                }
+                console.error(e);
+                showMessage('Download failed.', 'error');
+            });
+        }
+
+        // --- 5. LIBRARY FUNCTIONS ---
+
+        function renderLibrary(filter = '') {
+            dom.formulaContainer.innerHTML = '';
+            let hasResults = false;
+            const term = filter.toLowerCase();
+
+            // Init Accordion
+            const accordionDiv = document.createElement('div');
+            accordionDiv.setAttribute('data-accordion', 'open');
+            accordionDiv.className = 'space-y-4';
+            
+            FORMULA_DATA.forEach((cat, idx) => {
+                const matches = cat.formulas.filter(f => 
+                    f.name.toLowerCase().includes(term) || 
+                    f.latex.toLowerCase().includes(term) ||
+                    cat.category.toLowerCase().includes(term)
+                );
+
+                if (matches.length === 0) return;
+                hasResults = true;
+
+                const catId = `cat-${idx}`;
+                
+                // Create Category Section
+                const section = document.createElement('div');
+                section.className = 'bg-dark-surface border border-dark-border rounded-xl overflow-hidden';
+
+                // Header
+                const header = `
+                    <h2 id="${catId}-heading">
+                        <button type="button" class="flex items-center justify-between w-full p-5 font-medium text-left text-gray-200 hover:bg-[#1A1825] transition" data-accordion-target="#${catId}-body" aria-expanded="true" aria-controls="${catId}-body">
+                            <span class="flex items-center text-lg">
+                                <span class="w-8 h-8 flex items-center justify-center rounded-full bg-brand/20 text-brand mr-3 text-xl">${cat.icon}</span>
+                                ${cat.category}
+                            </span>
+                            <svg data-accordion-icon class="w-3 h-3 rotate-180 shrink-0 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5 5 1 1 5"/></svg>
+                        </button>
+                    </h2>
+                    <div id="${catId}-body" class="hidden" aria-labelledby="${catId}-heading">
+                        <div class="p-5 border-t border-dark-border grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            ${matches.map((formula, fIdx) => {
+                                const uid = `${catId}-f${fIdx}`;
+                                return `
+                                    <div class="library-item group bg-[#0D0B14] border border-dark-border rounded-lg p-4 flex flex-col justify-between hover:border-brand/50 transition-all duration-300">
+                                        <div>
+                                            <h4 class="text-sm font-semibold text-gray-300 mb-3 group-hover:text-brand transition-colors">${formula.name}</h4>
+                                            <div class="flex justify-center mb-4">
+                                                <div id="lib-preview-${uid}" class="library-formula-preview" data-latex="${formula.latex.replace(/"/g, '&quot;')}"></div>
+                                            </div>
+                                        </div>
+                                        <div class="flex gap-2 mt-auto">
+                                            <button onclick="handleLibCopy('${uid}')" class="flex-1 py-1.5 px-3 bg-brand text-white text-xs font-medium rounded hover:bg-brand-hover transition">Copy</button>
+                                            <button onclick="handleLibPng('lib-preview-${uid}')" class="flex-1 py-1.5 px-3 bg-dark-surface border border-dark-border text-gray-400 text-xs font-medium rounded hover:text-white hover:border-gray-500 transition">PNG</button>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+                
+                section.innerHTML = header;
+                accordionDiv.appendChild(section);
+            });
+
+            if (!hasResults) {
+                dom.noResults.classList.remove('hidden');
+            } else {
+                dom.noResults.classList.add('hidden');
+                dom.formulaContainer.appendChild(accordionDiv);
+                
+                // Render KaTeX in library
+                document.querySelectorAll('.library-formula-preview').forEach(el => {
+                    try {
+                        katex.render(el.getAttribute('data-latex'), el, { 
+                            throwOnError: false, 
+                            displayMode: true 
+                        });
+                    } catch {}
+                });
+
+                // Init Flowbite accordion
+                initFlowbite();
+                
+                // Open all items if searching
+                if (filter) {
+                    document.querySelectorAll('[data-accordion-target]').forEach(btn => {
+                        const target = document.querySelector(btn.getAttribute('data-accordion-target'));
+                        if (target) target.classList.remove('hidden');
+                        btn.setAttribute('aria-expanded', 'true');
+                    });
+                }
+            }
+        }
+
+        // --- 6. EVENT HANDLERS ---
+
+        // Expose to window for inline onclicks
+        window.handleLibCopy = (uid) => {
+            const el = document.getElementById(`lib-preview-${uid}`);
+            const latex = el.getAttribute('data-latex');
+            const type = dom.libraryDelimiterSelect.value;
+            copyToClipboard(wrapWithDelimiter(latex, type), 'Formula copied!');
+        };
+
+        window.handleLibPng = (id) => downloadImage(id);
+
+        function init() {
+            // Remove loading message safely
+            const loader = document.getElementById('loadingLibraryMessage');
+            if (loader) loader.remove();
+
+            // Coloris Init
+            Coloris({
+                el: '[data-coloris]',
+                theme: 'large',
+                themeMode: 'dark',
+                format: 'hex',
+                swatches: [
+                    '#000000', '#ffffff', '#7261B3', '#ef4444', '#22c55e', '#3b82f6'
+                ]
+            });
+
+            // Populate UI
+            populateSymbols();
+            renderLibrary();
+            renderEquation(); // Initial render
+
+            // Navigation
+            dom.navBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const page = btn.dataset.page;
+                    dom.pages.forEach(p => p.style.display = 'none');
+                    document.getElementById(`${page}-page`).style.display = 'block';
+                    
+                    // Update buttons
+                    dom.navBtns.forEach(b => {
+                        if (b === btn) {
+                            b.classList.remove('text-gray-400', 'hover:text-white', 'hover:bg-white/5');
+                            b.classList.add('bg-brand', 'text-white', 'shadow-[0_0_15px_rgba(114,97,179,0.4)]');
+                        } else {
+                            b.classList.add('text-gray-400', 'hover:text-white', 'hover:bg-white/5');
+                            b.classList.remove('bg-brand', 'text-white', 'shadow-[0_0_15px_rgba(114,97,179,0.4)]');
+                        }
+                    });
+                });
+            });
+
+            // Set default page
+            document.getElementById('main-page').style.display = 'block';
+
+            // Inputs
+            dom.latexInput.addEventListener('input', renderEquation);
+            [dom.fontSize, dom.radius].forEach(el => el.addEventListener('input', applyStyles));
+            
+            // Coloris callbacks (since change event is weird on custom inputs sometimes)
+            document.addEventListener('coloris:pick', event => {
+                applyStyles();
+            });
+
+            // Buttons
+            dom.copyLatexBtn.addEventListener('click', () => {
+                const code = dom.latexInput.value.trim();
+                if(code) copyToClipboard(wrapWithDelimiter(code, dom.delimiterSelect.value), 'LaTeX Copied!');
+            });
+            dom.downloadPngBtn.addEventListener('click', () => downloadImage('mathPreviewContainer'));
+
+            // Search
+            dom.librarySearch.addEventListener('input', (e) => renderLibrary(e.target.value));
+        }
+
+        // Start
+        document.addEventListener('DOMContentLoaded', init);
+
+    </script>
+</body>
+</html>
