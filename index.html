@@ -16,7 +16,7 @@
     <meta property="og:description" content="A powerful, real-time KaTeX editor to generate and customize beautiful LaTeX math equations. Change colors, fonts, and download high-resolution PNG images.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://katex.rafifmsn.com/"> 
-    <meta property="og:image" content="./assets/og.png">
+    <meta property="og:image" content="https://i.ibb.co.com/HTNbNm4z/og.png">
     <meta property="og:site_name" content="KaTeX Editor">
 
     <!-- Twitter Card Tags -->
@@ -25,7 +25,7 @@
     <meta name="twitter:creator" content="@rafifmsn"> 
     <meta name="twitter:title" content="KaTeX Real-time Editor">
     <meta name="twitter:description" content="Generate and customize beautiful LaTeX math equations with real-time rendering and high-res PNG download.">
-    <meta name="twitter:image" content="./assets/og.png">
+    <meta name="twitter:image" content="https://i.ibb.co.com/HTNbNm4z/og.png">
     
     <!-- Load Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -71,9 +71,9 @@
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
     
-    <!-- Load html2canvas -->
-    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-    
+    <!-- Load html-to-image -->
+    <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.13/dist/html-to-image.min.js"></script>
+
     <style>
         /* Custom styling */
         body { 
@@ -89,13 +89,8 @@
             transition: all 0.3s ease-in-out;
             background-color: white; /* Default white for math */
             color: black;
-            min-width: 100px;
+            min-width: 300px;
             text-align: center;
-        }
-
-        .library-item:hover .library-formula-preview {
-            transform: scale(1.02);
-            box-shadow: 0 0 15px rgba(114, 97, 179, 0.2);
         }
 
         /* Custom Scrollbar */
@@ -132,8 +127,16 @@
             box-shadow: 0 0 0 2px rgba(114, 97, 179, 0.3);
         }
 
-        @media screen and (max-width: 300px){
-            #logo {display: none;}
+        @media (max-width: 480px) {
+            #mathPreviewContainer, .library-formula-preview {
+                transform: scale(0.6);
+            }
+        }
+
+        @media (max-width: 300px){
+            #logo {
+                display: none;
+            }
         }
     </style>
 </head>
@@ -166,7 +169,7 @@
         <!-- ================================== 1. MAIN PAGE (EDITOR) ================================== -->
         <div id="main-page" class="page">
             <h2 class="text-2xl font-bold mb-6 text-white border-b border-dark-border pb-4 flex items-center">
-                <span class="text-brand mr-2">✏️</span> Real-time LaTeX Editor
+                <span class="text-brand mr-2">✏️</span> LaTeX Editor
             </h2>
             
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
@@ -610,56 +613,41 @@
         }
 
         function downloadImage(elementId, filename = 'formula.png') {
-            const el = document.getElementById(elementId);
-            if (!el || el.textContent.includes('Preview appears')) {
+            const node = document.getElementById(elementId);
+
+            if (!node) {
                 showMessage('Nothing to download!', 'error');
                 return;
             }
 
             showMessage('Generating Image...', 'info');
 
-            const katexEl = el.querySelector('.katex');
-            let originalDisplay = '';
-            let originalAlign = '';
-            
-            if (katexEl) {
-                // Store original styles
-                originalDisplay = katexEl.style.display;
-                originalAlign = katexEl.style.verticalAlign;
-                
-                // Force stable layout for html2canvas to capture elements like brackets and fractions fully
-                katexEl.style.display = 'inline-block';
-                katexEl.style.verticalAlign = 'middle'; 
-            }
-
-            html2canvas(el, {
-                backgroundColor: null,
-                scale: 3, // High resolution
-                logging: false,
-                useCORS: true
-            }).then(canvas => {
-                // Restore styles immediately after capture
-                if (katexEl) {
-                    katexEl.style.display = originalDisplay;
-                    katexEl.style.verticalAlign = originalAlign;
+            // Use html-to-image UMD global
+            htmlToImage.toPng(node, {
+                pixelRatio: 3,
+                skipFonts: true,
+                filter: (element) => {
+                    // Prevent inlining stylesheets, avoids console errors
+                    if (element.tagName === 'LINK' || element.tagName === 'STYLE') {
+                        return false;
+                    }
+                    return true;
                 }
-
+            })
+            .then(dataUrl => {
                 const link = document.createElement('a');
                 link.download = filename;
-                link.href = canvas.toDataURL('image/png');
+                link.href = dataUrl;
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
                 showMessage('Image Downloaded!');
-            }).catch(e => {
-                // Restore styles on error too
-                if (katexEl) {
-                    katexEl.style.display = originalDisplay;
-                    katexEl.style.verticalAlign = originalAlign;
-                }
-                console.error(e);
+            })
+            .catch(err => {
+                console.error(err);
                 showMessage('Download failed.', 'error');
             });
+
         }
 
         // --- 5. LIBRARY FUNCTIONS ---
