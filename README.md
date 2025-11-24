@@ -1,5 +1,7 @@
 # KaTeX Real-time Math Editor
 
+![Thumbnail](/assets/og.png)
+
 ## ✨ Overview
 
 This project is a clean, single-file, browser-based application designed to make creating, customizing, and exporting high-quality mathematical equations effortless. Utilizing the speed of  KaTeX for rendering and the flexibility of modern web standards, it allows users to type LaTeX code and instantly see the result, fine-tune its appearance, and download a presentation-ready PNG image.
